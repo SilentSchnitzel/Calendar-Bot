@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+require('dotenv').config();
 
 // creating discord bot as client
 const client = new Discord.Client({intents: ["Guilds", "GuildMessages", "GuildScheduledEvents"]});
@@ -9,4 +10,4 @@ client.once('ready', () => {
 })
 
 //has to be the last line of code in the file
-client.login('MTExMzcyOTgyMzQ1ODcyMTc5Mg.GmXvO6.-Ub89s6wlVj_tvkDw-6TMGL8hyCquAV0EQGqLg');
+client.login(process.env.BOT_KEY);
