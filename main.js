@@ -1,7 +1,8 @@
-const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
+const helper = require('./commands/help.js');
 
 // creating discord bot as client
 const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, 
@@ -30,12 +31,8 @@ for(const file of commandFiles)
     }
 }
 
-
-
-
 //when an error does occur then display it in the console
 client.on('error', console.error);
-const prefix = "$";
 
 client.once('ready', ()=>{
     console.log("Bot online");
@@ -47,6 +44,10 @@ client.on('interactionCreate', (interaction) => {
     if(interaction.commandName === 'ping')
     {
         interaction.reply("pong!");
+    }
+    if(interaction.commandName === 'help')
+    {
+        helper.execute(interaction);
     }
 })
 
