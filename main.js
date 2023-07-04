@@ -3,6 +3,7 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const helper = require('./commands/help.js');
+const ping = require('./commands/ping.js');
 
 // creating discord bot as client
 const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, 
@@ -43,7 +44,7 @@ client.on('interactionCreate', (interaction) => {
 
     if(interaction.commandName === 'ping')
     {
-        interaction.reply("pong!");
+        ping.execute(interaction);
     }
     if(interaction.commandName === 'help')
     {

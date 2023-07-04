@@ -1,7 +1,7 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
-    data: help = new SlashCommandBuilder()
+    data: new SlashCommandBuilder()
         .setName('help')
         .setDescription('View tips for using Calendar Bot'),
     async execute (interaction)
@@ -13,9 +13,6 @@ module.exports = {
             const newStr = String(str);
             `${newStr[0].toUpperCase()}${newStr.slice(1).toLowerCase()}`;
         }
-            
-
-        const wheee = 'bruh please help me';
 
         const categories = directories.map((dir) => {
             const getCommands = interaction.client.commands
@@ -31,14 +28,18 @@ module.exports = {
                 commands: getCommands,
             }
         });
+
+        const test = `test`;
         const embed = new EmbedBuilder()
             .setTitle('Calender Bot Help')
-            .setDescription(`
-            foo
-            `)
+            .setDescription("I make setting reminders and organizing events easier.\n" +
+            "For more information about the bot run the `/info` command.\n" +
+            "Some example uses of commands can be viewed below"
+            )
             .setColor(0x0099ff)
+            .addFields({name: 'Examples', value: 'foo'})
             
 
-        await interaction.reply({embeds: [embed]});
+        await interaction.reply({embeds: [embed], ephemeral: true});
     },
 };

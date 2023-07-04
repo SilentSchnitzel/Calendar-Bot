@@ -1,29 +1,25 @@
-const { SlashCommandBuilder } = require('discord.js');
-
-// module.exports = {
-// 	data: ping = new SlashCommandBuilder()
-// 		.setName('ping')
-// 		.setDescription('Replies with Pong!'),
-// 	async execute(interaction) {
-// 		await interaction.reply('Pong!');
-// 	},
-// };
-
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-	
-	data: ping = commandCreation(),
-	async execute(interaction) {
-		await interaction.reply('Pong!');
-		
-			
-	}
-};
-
-function commandCreation()
-{
-	const ping = new SlashCommandBuilder()
+	data: new SlashCommandBuilder()
 		.setName('ping')
-		.setDescription('Replies with Pong!');
-	return ping;
+		.setDescription('Test connectivity'),
+	async execute(interaction) {
+		await interaction.deferReply({ephemeral: true});
+		
+		const reply = await interaction.fetchReply();
+
+		const ping = reply.createdTimestamp - interaction.createdTimestamp
+
+		const pingEmbed = new EmbedBuilder()
+			.setColor(0x0011ff)
+			.addFields(
+				{name: 'Client: ', value: `${ping}ms`, inline: true},
+				{name: 'Websocket: ', value: `${interaction.client.ws.ping}ms`, inline: true},
+			)
+
+		//interaction.editReply(`Client: ${ping}ms | Websocket: ${interaction.client.ws.ping}ms`)
+		interaction.editReply({embeds: [pingEmbed], ephemeral: true})
+	}
+	
 }
