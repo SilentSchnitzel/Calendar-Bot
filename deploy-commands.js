@@ -3,43 +3,42 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 
-const commands = [];
-// Grab all the command files from the commands directory you created earlier
-const foldersPath = path.join(__dirname, 'commands');
+function deploy_commands(guild_id) {
+	const commands = [];
+	// Grab all the command files from the commands directory you created earlier
+	const foldersPath = path.join(__dirname, 'commands');
 
-//gets array of every file in the folders path directory
-const commandFolders = fs.readdirSync(foldersPath);
+	//gets array of every file in the folders path directory
+	const commandFolders = fs.readdirSync(foldersPath);
 
-for (const folder of commandFolders) {
+	for (const folder of commandFolders) {
 
-	const filePath = path.join(foldersPath, folder);
-	const command = require(filePath);
-	
-	if('data' in command && 'execute' in command)
-	{
-		commands.push(command.data.toJSON());
-	} else 
-	{
-		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		const filePath = path.join(foldersPath, folder);
+		const command = require(filePath);
+
+		if ('data' in command && 'execute' in command) {
+			commands.push(command.data.toJSON());
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
 	}
+	// Construct and prepare an instance of the REST module
+	const rest = new REST({ version: '10' }).setToken(process.env.BOT_KEY);
+	// and deploy commands
+	(async () => {
+		try {
+			console.log(`Started refreshing ${commands.length} application (/) commands.`);
+			// The put method is used to fully refresh all commands in the guild with the current set
+			const data = await rest.put(
+				Routes.applicationGuildCommands(process.env.CLIENT_ID, guild_id),
+				{ body: commands },
+			);
+
+			console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+		} catch (error) {
+			//catch and log any errors
+			console.error(error);
+		}
+	})();
 }
-// Construct and prepare an instance of the REST module
-const rest = new REST({version : '10'}).setToken(process.env.BOT_KEY);
-
-// and deploy commands
-(async () => {
-	try {
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
-		//console.log(commands);
-		// The put method is used to fully refresh all commands in the guild with the current set
-		const data = await rest.put(
-			Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-			{ body: commands },
-		);
-
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-	} catch (error) {
-		//catch and log any errors
-		console.error(error);
-	}
-})();
+module.exports = deploy_commands;

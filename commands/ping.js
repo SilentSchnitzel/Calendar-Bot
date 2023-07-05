@@ -12,7 +12,7 @@ module.exports = {
 		const ping = reply.createdTimestamp - interaction.createdTimestamp
 
 		const pingEmbed = new EmbedBuilder()
-			.setColor(0x0011ff)
+			.setColor("Grey")
 			.addFields(
 				{name: 'Client: ', value: `${ping}ms`, inline: true},
 				{name: 'Websocket: ', value: `${interaction.client.ws.ping}ms`, inline: true},

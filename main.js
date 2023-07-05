@@ -4,11 +4,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const helper = require('./commands/help.js');
 const ping = require('./commands/ping.js');
-
+const deploy_commands = require('./deploy-commands.js');
+const daily_reminder = require('./commands/daily-reminder');
 // creating discord bot as client
-const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, 
-    GatewayIntentBits.GuildScheduledEvents, GatewayIntentBits.DirectMessages, 
-    GatewayIntentBits.DirectMessageTyping, GatewayIntentBits.GuildMessageTyping]});
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildScheduledEvents, GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.DirectMessageTyping, GatewayIntentBits.GuildMessageTyping]
+});
 
 client.commands = new Collection();
 //gets the path to the commands folder
@@ -16,18 +19,15 @@ const commandsPath = path.join(__dirname, "commands");
 //looks at all of the files in the commands directory and filters out the non javascript files
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 //loops through all javascript files in the commands folder
-for(const file of commandFiles)
-{
+for (const file of commandFiles) {
     //sets the file path of a certain file which holds the code for a command
     const filePath = path.join(commandsPath, file);
     //determine the command name?
     const command = require(filePath);
-    
-    if('data' in command && 'execute' in command)
-    {
+
+    if ('data' in command && 'execute' in command) {
         client.commands.set(command.name, command);
-    } else
-    {
+    } else {
         console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
     }
 }
@@ -35,22 +35,24 @@ for(const file of commandFiles)
 //when an error does occur then display it in the console
 client.on('error', console.error);
 
-client.once('ready', ()=>{
+client.once('ready', () => {
     console.log("Bot online");
+    const guild_id = client.guilds.cache.map(guild => guild.id);
+    deploy_commands(guild_id);
 })
 
 client.on('interactionCreate', (interaction) => {
-    if(!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) return;
 
-    if(interaction.commandName === 'ping')
-    {
+    if (interaction.commandName === 'ping') {
         ping.execute(interaction);
     }
-    if(interaction.commandName === 'help')
-    {
+    if (interaction.commandName === 'help') {
         helper.execute(interaction);
     }
+    if (interaction.commandName === 'daily-reminder') {
+        daily_reminder.execute(interaction);
+    }
 })
-
 //has to be the last line of code in the file
 client.login(process.env.BOT_KEY);
