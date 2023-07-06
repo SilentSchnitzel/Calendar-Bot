@@ -3,42 +3,25 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 
-function deploy_commands(guild_id) {
-	const commands = [];
-	// Grab all the command files from the commands directory you created earlier
-	const foldersPath = path.join(__dirname, 'commands');
 
-	//gets array of every file in the folders path directory
-	const commandFolders = fs.readdirSync(foldersPath);
-
-	for (const folder of commandFolders) {
-
-		const filePath = path.join(foldersPath, folder);
-		const command = require(filePath);
+function deploy_commands(client) {
+	const cmds = [];
+	const fPath = path.join(__dirname, 'commands');
+	const cmdFolders = fs.readdirSync(fPath);
+	for (const folder of cmdFolders) {
+		const Path = path.join(fPath, folder);
+		const command = require(Path);
 
 		if ('data' in command && 'execute' in command) {
-			commands.push(command.data.toJSON());
+			cmds.push(command.data.toJSON());
 		} else {
-			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+			console.log(`[WARNING] The command at ${Path} is missing a required "data" or "execute" property.`);
 		}
 	}
 	// Construct and prepare an instance of the REST module
 	const rest = new REST({ version: '10' }).setToken(process.env.BOT_KEY);
-	// and deploy commands
-	(async () => {
-		try {
-			console.log(`Started refreshing ${commands.length} application (/) commands.`);
-			// The put method is used to fully refresh all commands in the guild with the current set
-			const data = await rest.put(
-				Routes.applicationGuildCommands(process.env.CLIENT_ID, guild_id),
-				{ body: commands },
-			);
-
-			console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-		} catch (error) {
-			//catch and log any errors
-			console.error(error);
-		}
-	})();
+	rest.put(Routes.applicationCommands(client.user.id), { body: cmds },);
+	console.log('finished registering commands')
 }
+
 module.exports = deploy_commands;

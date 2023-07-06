@@ -4,8 +4,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
         .setDescription('View tips for using Calendar Bot'),
-    async execute (interaction)
-    {
+    async execute(interaction) {
         const directories = [
             ...new Set(interaction.client.commands.map((cmd) => cmd.folder)),
         ];
@@ -29,17 +28,16 @@ module.exports = {
             }
         });
 
-        const test = `test`;
         const embed = new EmbedBuilder()
             .setTitle('Calender Bot Help')
             .setDescription("I make setting reminders and organizing events easier.\n" +
-            "For more information about the bot run the `/info` command.\n" +
-            "Some example uses of commands can be viewed below"
+                "For more information about the bot run the `/info` command.\n" +
+                "Some example uses of commands can be viewed below"
             )
             .setColor(0x0099ff)
-            .addFields({name: 'Examples', value: 'foo'})
-            
+            .addFields({ name: 'Examples', value: 'foo' });
 
-        await interaction.reply({embeds: [embed], ephemeral: true});
+
+        await interaction.reply({ embeds: [embed], ephemeral: true });
     },
 };

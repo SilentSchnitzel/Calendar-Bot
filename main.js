@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const helper = require('./commands/help.js');
 const ping = require('./commands/ping.js');
-const deploy_commands = require('./deploy-commands.js');
 const daily_reminder = require('./commands/daily-reminder');
+const deploy_commands = require('./deploy-commands.js');
 // creating discord bot as client
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages,
@@ -32,13 +32,12 @@ for (const file of commandFiles) {
     }
 }
 
-//when an error does occur then display it in the console
+//when an error occurs then display it in the console
 client.on('error', console.error);
 
-client.once('ready', () => {
+client.once('ready', async () => {
     console.log("Bot online");
-    const guild_id = client.guilds.cache.map(guild => guild.id);
-    deploy_commands(guild_id);
+    deploy_commands(client);
 })
 
 client.on('interactionCreate', (interaction) => {
