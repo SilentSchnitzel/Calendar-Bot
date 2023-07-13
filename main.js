@@ -6,6 +6,7 @@ const helper = require('./commands/help.js');
 const ping = require('./commands/ping.js');
 const daily_reminder = require('./commands/daily-reminder');
 const deploy_commands = require('./deploy-commands.js');
+const check_daily_reminders = require('./utils/daily-reminder-checker');
 const mongoose = require('mongoose');
 // creating discord bot as client
 const client = new Client({
@@ -61,5 +62,9 @@ client.on('interactionCreate', (interaction) => {
         daily_reminder.execute(interaction);
     }
 })
+//run the check daily reminders function every minute to check for any reminders that need to be sent out
+setInterval(() => {
+    check_daily_reminders(client);
+}, 60000);
 //has to be the last line of code in the file
 client.login(process.env.BOT_KEY);
