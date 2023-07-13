@@ -27,7 +27,7 @@ module.exports = {
                 commands: getCommands,
             }
         });
-
+        // \n means new line
         const embed = new EmbedBuilder()
             .setTitle('Calender Bot Help')
             .setDescription("I make setting reminders and organizing events easier.\n" +

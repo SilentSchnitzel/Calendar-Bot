@@ -6,12 +6,19 @@ const helper = require('./commands/help.js');
 const ping = require('./commands/ping.js');
 const daily_reminder = require('./commands/daily-reminder');
 const deploy_commands = require('./deploy-commands.js');
+const mongoose = require('mongoose');
 // creating discord bot as client
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildScheduledEvents, GatewayIntentBits.DirectMessages,
     GatewayIntentBits.DirectMessageTyping, GatewayIntentBits.GuildMessageTyping]
 });
+//connecting to mongodb database
+(async () => {
+    mongoose.set('strictQuery', false);
+    mongoose.connect(process.env.MONGODB_URI, { keepAlive: true });
+    console.log('connected to the database');
+})();
 
 client.commands = new Collection();
 //gets the path to the commands folder
@@ -40,11 +47,12 @@ client.once('ready', async () => {
     deploy_commands(client);
 })
 
+//command handling
 client.on('interactionCreate', (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === 'ping') {
-        ping.execute(interaction);
+        ping.execute(interaction); //run the execute component of the ping command
     }
     if (interaction.commandName === 'help') {
         helper.execute(interaction);

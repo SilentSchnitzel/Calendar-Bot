@@ -1,5 +1,7 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const updateDB = require('../utils/daily-reminder-users.js');
 
+//.addStringOption is how you add arguments to your command allowing for user input
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('daily-reminder')
@@ -13,13 +15,74 @@ module.exports = {
                 .setDescription('write what you need to be reminded about')
                 .setRequired(true)),
     async execute(interaction) {
+        //getting user input (time and reminder)
         const time = interaction.options.getString('time');
         const reminder = interaction.options.getString('reminder');
+
+        const [hours, minutes] = convertTimeStringToDate(time);
+        //if the date is invalid, then inform the user
+        if (hours == null && minutes == null) {
+            invalidDateEmbed = new EmbedBuilder()
+                .setTitle('Error')
+                .setDescription('The time you entered was invalid.\n' +
+                    'For help using this command, run the `/help` command.')
+                .setColor('Red');
+            await interaction.reply({ embeds: [invalidDateEmbed], ephemeral: true });
+            return;
+        }
+
+        const userId = interaction.user.id;
+        const guildId = interaction.guildId;
+
         const initialEmbed = new EmbedBuilder()
             .setTitle('New Daily Reminder')
-            .setDescription(`Calendar Bot will now reminde you every day at ${time} to do this task: ${reminder}`)
+            .setDescription(`Calendar Bot will now remind you every day at ${time} to do this task: ${reminder}.`)
             .setColor('Green');
-        await interaction.reply({ embeds: [initialEmbed], ephemeral: true });
 
+        const result = updateDB(userId, guildId, reminder, hours, minutes);
+        if (result == -1) {
+            const commandFailedEmbed = new EmbedBuilder()
+                .setTitle('New Daily Reminder')
+                .setDescription('you already have a maximum of 5 daily reminder. You must delete one of your daily reminders to add this reminder.')
+                .setColor('Red');
+            await interaction.reply({ embeds: [commandFailedEmbed], ephemeral: true })
+        } else if (result == -2) {
+            const unexpectedErrorEmbed = new EmbedBuilder()
+                .setTitle('New Daily Reminder')
+                .setDescription('An unexpected error has occured. Please try again later.')
+                .setColor('Red');
+            await interaction.reply({ embeds: [unexpectedErrorEmbed], ephemeral: true });
+        } else {
+            await interaction.reply({ embeds: [initialEmbed], ephemeral: true });
+
+        }
     }
+
 }
+
+//convert strings like "8:00" and "22:00" to something of type date
+function convertTimeStringToDate(timeString) {
+    var date = new Date();
+    //splits the string into the hour and minute part
+    var timeComponents = timeString.split(':');
+    var hours = parseInt(timeComponents[0], 10);
+    var minutes = parseInt(timeComponents[1], 10);
+    // Set the hours and minutes of the date object
+    date.setHours(hours);
+    date.setMinutes(minutes);
+
+    //checks to see if the date is valid
+    const validity = isNaN(date);
+    if (validity == true) {
+        return [null, null];
+    }
+    if (hours > 23) {
+        return [null, null];
+    }
+    if (minutes > 59) {
+        return [null, null];
+    }
+    return [hours, minutes];
+}
+
+

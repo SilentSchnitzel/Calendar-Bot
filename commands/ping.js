@@ -5,7 +5,7 @@ module.exports = {
 		.setName('ping')
 		.setDescription('Test connectivity'),
 	async execute(interaction) {
-		await interaction.deferReply({ ephemeral: true });
+		await interaction.deferReply({ ephemeral: true }); //ephemeral means that only the user who intiated the interaction with the bot can see the message
 
 		const reply = await interaction.fetchReply();
 
