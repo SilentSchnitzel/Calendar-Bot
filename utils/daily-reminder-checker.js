@@ -1,5 +1,5 @@
 const dailyReminderUsers = require('../models/daily-reminder-schema.js');
-const { Client, EmbedBuilder } = require('discord.js')
+const { Client, EmbedBuilder, Embed } = require('discord.js')
 /**
  * 
  * @param {Client} client 
@@ -32,8 +32,27 @@ async function check_daily_reminders(client) {
             .setTitle('Daily Reminder')
             .setDescription(`It is now time to: ${users[i].reminder}`)
             .setColor('Gold');
+        if (users[i].channel === 'dm') {
+            recipient.send({ embeds: [embed] });
+            return;
+        } else {
+            const channelName = guild.channels.cache.find(c => c.name == users[i].channel && c.type == 0);
+            if (!channelName) {
+                const invalidChannelEmbed = new EmbedBuilder()
+                    .setTitle('Error')
+                    .setDescription(`invalid channel for this reminder: ${users[i].reminder}`)
+                    .setColor('Red');
+                recipient.send({ embeds: [invalidChannelEmbed] });
 
-        recipient.send({ embeds: [embed] });
+            } else {
+                const channelId = channelName.id;
+                if (!channelId) {
+                    console.log('invalid channel id');
+                }
+                const channel = guild.channels.cache.get(channelId);
+                channel.send({ content: `<@${users[i].userId}>`, embeds: [embed] });
+            }
+        }
 
     }
 }

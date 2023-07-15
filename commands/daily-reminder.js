@@ -5,7 +5,7 @@ const updateDB = require('../utils/daily-reminder-users.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('daily-reminder')
-        .setDescription('foo')
+        .setDescription('A command that allows you to set daily reminders for yourself')
         .addStringOption(option1 =>
             option1.setName('time')
                 .setDescription('set the time at which you would like to recieve your daily reminder')
@@ -13,11 +13,16 @@ module.exports = {
         .addStringOption(option2 =>
             option2.setName('reminder')
                 .setDescription('write what you need to be reminded about')
+                .setRequired(true))
+        .addStringOption(option3 =>
+            option3.setName('channel')
+                .setDescription('channel you would like to recieve your reminder in. type dm to recieve reminder in dms')
                 .setRequired(true)),
     async execute(interaction) {
         //getting user input (time and reminder)
         const time = interaction.options.getString('time');
         const reminder = interaction.options.getString('reminder');
+        const channel = interaction.options.getString('channel');
 
         const [hours, minutes] = convertTimeStringToDate(time);
         //if the date is invalid, then inform the user
@@ -36,10 +41,10 @@ module.exports = {
 
         const initialEmbed = new EmbedBuilder()
             .setTitle('New Daily Reminder')
-            .setDescription(`Calendar Bot will now remind you every day at ${time} to do this task: ${reminder}.`)
+            .setDescription(`Calendar Bot will now remind you every day at ${time} to do this task: ${reminder} in this channel: ${channel}.`)
             .setColor('Green');
 
-        const result = updateDB(userId, guildId, reminder, hours, minutes);
+        const result = updateDB(userId, guildId, reminder, hours, minutes, channel);
         if (result == -1) {
             const commandFailedEmbed = new EmbedBuilder()
                 .setTitle('New Daily Reminder')

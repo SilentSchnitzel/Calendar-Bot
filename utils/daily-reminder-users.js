@@ -1,7 +1,7 @@
 const dailyReminderUsers = require('../models/daily-reminder-schema.js');
 
 //this function will update the database on the user input
-async function updateDB(userId, guildId, reminder, hours, minutes) {
+async function updateDB(userId, guildId, reminder, hours, minutes, channel) {
     // a query is a request for information from a database
     const query = {
         userId: userId,
@@ -18,14 +18,26 @@ async function updateDB(userId, guildId, reminder, hours, minutes) {
             reminder: reminder,
             hours: hours,
             minutes: minutes,
+            channel: channel,
         });
-        await newReminder.save().catch((error) => { console.log(`error uploading reminder to database. error: ${error}`); return -2; })
+        await newReminder.save().catch((error) => { console.log(`error uploading reminder to database. error: ${error}`); return -2; });
+        return 0;
     }
     //if the user does have some reminders registered in the database,
     //check to see if the amount has not exceeded 5 (maximum amount of daily reminders one user is allowed to have)
     if (users.length == 5) {
         return -1;
     }
+    const newReminder = dailyReminderUsers({
+        userId: userId,
+        guildId: guildId,
+        reminder: reminder,
+        hours: hours,
+        minutes: minutes,
+        channel: channel,
+    });
+    await newReminder.save().catch((error) => { console.log(`error uploading reminder to database. error: ${error}`); return -2; });
+    return 0;
 }
 
 

@@ -23,6 +23,10 @@ const dailyReminderSchema = new Schema({
         type: Number,
         required: true,
     },
+    channel: {
+        type: String,
+        required: true,
+    },
 });
 
 module.exports = model('daily-reminder-schema', dailyReminderSchema);
