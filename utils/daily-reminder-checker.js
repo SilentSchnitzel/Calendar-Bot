@@ -1,5 +1,5 @@
 const dailyReminderUsers = require('../models/daily-reminder-schema.js');
-const { Client, EmbedBuilder, Embed } = require('discord.js')
+const { Client, EmbedBuilder } = require('discord.js')
 /**
  * 
  * @param {Client} client 

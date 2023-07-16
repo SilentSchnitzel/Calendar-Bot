@@ -1,5 +1,6 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
 const updateDB = require('../utils/daily-reminder-users.js');
+const checkDuplicateDailyReminders = require('../utils/check-duplicate-daily-reminders.js');
 
 //.addStringOption is how you add arguments to your command allowing for user input
 module.exports = {
@@ -43,6 +44,16 @@ module.exports = {
             .setTitle('New Daily Reminder')
             .setDescription(`Calendar Bot will now remind you every day at ${time} to do this task: ${reminder} in this channel: ${channel}.`)
             .setColor('Green');
+
+        const duplicate = await checkDuplicateDailyReminders(userId, guildId, reminder);
+        if (duplicate == -1) {
+            const duplicateReminderEmbed = new EmbedBuilder()
+                .setTitle('Error')
+                .setDescription('the reminder you entered matches another one of your reminders and thus this reminder will not be saved. you may not have duplicate reminders')
+                .setColor('Red');
+            await interaction.reply({ embeds: [duplicateReminderEmbed], ephemeral: true });
+            return;
+        }
 
         const result = updateDB(userId, guildId, reminder, hours, minutes, channel);
         if (result == -1) {
@@ -89,5 +100,3 @@ function convertTimeStringToDate(timeString) {
     }
     return [hours, minutes];
 }
-
-
