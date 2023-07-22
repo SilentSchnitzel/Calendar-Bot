@@ -57,4 +57,13 @@ async function check_daily_reminders(client) {
     }
 }
 
+
+async function getUserTime() {
+    const currentTime = new Date();
+    const utcHour = currentTime.getUTCHours();
+    const utcMinute = currentTime.getUTCMinutes() - 2;
+    console.log(utcHour);
+    console.log(utcMinute);
+    
+}
 module.exports = check_daily_reminders;

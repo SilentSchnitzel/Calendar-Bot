@@ -55,7 +55,7 @@ module.exports = {
             return;
         }
 
-        const result = updateDB(userId, guildId, reminder, hours, minutes, channel);
+        const result = await updateDB(userId, guildId, reminder, hours, minutes, channel);
         if (result == -1) {
             const commandFailedEmbed = new EmbedBuilder()
                 .setTitle('New Daily Reminder')
