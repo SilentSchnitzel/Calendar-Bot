@@ -1,6 +1,7 @@
-const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
+const { EmbedBuilder, SlashCommandBuilder, UserFlags } = require('discord.js');
 const updateDB = require('../utils/daily-reminder-users.js');
 const checkDuplicateDailyReminders = require('../utils/check-duplicate-daily-reminders.js');
+const timezoneSchema = require('../models/timezone-schema.js');
 
 //.addStringOption is how you add arguments to your command allowing for user input
 module.exports = {
@@ -54,7 +55,7 @@ module.exports = {
             await interaction.reply({ embeds: [duplicateReminderEmbed], ephemeral: true });
             return;
         }
-
+        const info = await getTimezone(userId, guildId);
         const result = await updateDB(userId, guildId, reminder, hours, minutes, channel);
         if (result == -1) {
             const commandFailedEmbed = new EmbedBuilder()
@@ -99,4 +100,31 @@ function convertTimeStringToDate(timeString) {
         return [null, null];
     }
     return [hours, minutes];
+}
+
+async function getTimezone(userId, guildId) {
+    let hours;
+    let minutes;
+    let status;
+    const query = {
+        userId: userId,
+        guildId: guildId,
+        timezoneSpecified: true,
+    }
+    const user = await timezoneSchema.find(query);
+    console.log(user);
+    if (user.length > 1) {
+        status = -1;
+        return [status, hours, minutes];
+    }
+    if (user.length == 0) {
+        status = 0;
+        return [status, hours, minutes];
+    }
+    status = 1;
+    hours = user[0].hours;
+    minutes = user[0].minutes;
+    console.log(hours);
+    console.log(minutes);
+    return [status, hours, minutes];
 }
