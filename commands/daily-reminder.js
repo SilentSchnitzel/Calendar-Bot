@@ -1,7 +1,8 @@
-const { EmbedBuilder, SlashCommandBuilder, UserFlags } = require('discord.js');
+const { EmbedBuilder, SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const updateDB = require('../utils/daily-reminder-users.js');
 const checkDuplicateDailyReminders = require('../utils/check-duplicate-daily-reminders.js');
 const timezoneSchema = require('../models/timezone-schema.js');
+const warning = require('../utils/warning.js');
 
 //.addStringOption is how you add arguments to your command allowing for user input
 module.exports = {
@@ -70,7 +71,25 @@ module.exports = {
                 .setColor('Red');
             await interaction.reply({ embeds: [unexpectedErrorEmbed], ephemeral: true });
         } else {
-            await interaction.reply({ embeds: [initialEmbed], ephemeral: true });
+            const w = new warning(userId, guildId);
+            const warnUser = await w.getUser();
+            if (warnUser == 1) {
+                const button = new ButtonBuilder()
+                    .setCustomId('warn')
+                    .setLabel('Do Not Show Again')
+                    .setStyle(ButtonStyle.Primary);
+
+                const warningEmbed = new EmbedBuilder()
+                    .setTitle('Warning')
+                    .setDescription('It appears that you have not configured your timezone. It will be assumed that you will be 3 hours behind UTC time (whatever time it is in New York).')
+                    .setColor('Red');
+
+                const row = new ActionRowBuilder()
+                    .addComponents(button);
+                await interaction.reply({ embeds: [initialEmbed, warningEmbed], components: [row], ephemeral: true });
+            } else {
+                await interaction.reply({ embeds: [initialEmbed], ephemeral: true });
+            }
 
         }
     }
@@ -112,7 +131,6 @@ async function getTimezone(userId, guildId) {
         timezoneSpecified: true,
     }
     const user = await timezoneSchema.find(query);
-    console.log(user);
     if (user.length > 1) {
         status = -1;
         return [status, hours, minutes];

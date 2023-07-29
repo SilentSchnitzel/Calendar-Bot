@@ -1,4 +1,4 @@
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
@@ -8,6 +8,9 @@ const daily_reminder = require('./commands/daily-reminder');
 const deploy_commands = require('./deploy-commands.js');
 const check_daily_reminders = require('./utils/daily-reminder-checker');
 const config_timezone = require('./commands/config-time-zones.js');
+const utcTime = require('./commands/utc-time.js');
+const timezoneHelp = require('./commands/timezone-help.js');
+const warning = require('./utils/warning.js');
 const mongoose = require('mongoose');
 const { config } = require('dotenv');
 // creating discord bot as client
@@ -52,8 +55,20 @@ client.once('ready', async () => {
 
 //command handling
 client.on('interactionCreate', (interaction) => {
+    if (interaction.isButton()) {
+        if (interaction.customId == 'warn') {
+            const w = new warning();
+            const embed = new EmbedBuilder()
+                .setTitle('Do Not Show Again')
+                .setDescription('Calendar Bot will now no longer show this warning.')
+                .setColor('White');
+            w.editDatabase(interaction.user.id, interaction.guildId);
+            interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+    }
     if (!interaction.isChatInputCommand()) return;
 
+    //handle slash commands
     if (interaction.commandName === 'ping') {
         ping.execute(interaction); //run the execute component of the ping command
     }
@@ -66,7 +81,14 @@ client.on('interactionCreate', (interaction) => {
     if (interaction.commandName === 'config-time-zones') {
         config_timezone.execute(interaction);
     }
-})
+    if (interaction.commandName === 'utc-time') {
+        utcTime.execute(interaction);
+    }
+    if (interaction.commandName === 'timezone-help') {
+        timezoneHelp.execute(interaction);
+    }
+});
+
 //run the check daily reminders function every minute to check for any reminders that need to be sent out
 setInterval(() => {
     check_daily_reminders(client);

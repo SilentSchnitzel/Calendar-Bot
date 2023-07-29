@@ -23,6 +23,8 @@ function deploy_commands(client) {
 	}
 	// Construct and prepare an instance of the REST module
 	const rest = new REST({ version: '10' }).setToken(process.env.BOT_KEY);
+	//remove all global commands
+	//rest.put(Routes.applicationCommands(client.user.id), { body: [] });
 	rest.put(Routes.applicationCommands(client.user.id), { body: cmds },); //register every command in "cmds" globaly
 	console.log('finished registering commands')
 }
