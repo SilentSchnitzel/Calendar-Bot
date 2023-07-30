@@ -21,6 +21,10 @@ const timezoneSchema = new Schema({
         type: Number,
         required: true,
     },
+    dayLightSavingsTime: {
+        type: Boolean,
+        required: true,
+    },
 });
 
 module.exports = model('timezone-schema', timezoneSchema);

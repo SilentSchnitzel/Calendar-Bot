@@ -5,6 +5,14 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('config-time-zones')
         .setDescription('Use this command to configure your timezone')
+        .addStringOption(dayLightSavingsTime =>
+            dayLightSavingsTime.setName('day-light-savings-time')
+                .setDescription('select whether you have your clocks modified due to day light savings time')
+                .setRequired(true)
+                .setChoices(
+                    { name: 'currently using day light savings time', value: '0' },
+                    { name: 'not using day light savings time', value: '-1' },
+                ))
         .addStringOption(timezone =>
             timezone.setName('time-zone1')
                 .setDescription('select your timezone here if you are behind or are using Coordinated Universal Time')
@@ -56,14 +64,18 @@ module.exports = {
                     { name: 'UTC + 14:00', value: '14' },
                 )),
 
-
-
     async execute(interaction) {
         const timezoneOne = interaction.options.getString('time-zone1');
         const timezoneTwo = interaction.options.getString('time-zone2');
+        let dayLightSavingsTime = interaction.options.getString('day-light-savings-time');
+        if (dayLightSavingsTime == '0') {
+            dayLightSavingsTime = true;
+        } else {
+            dayLightSavingsTime = false;
+        }
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
-        const result = await handleInput(timezoneOne, timezoneTwo, userId, guildId);
+        const result = await handleInput(timezoneOne, timezoneTwo, userId, guildId, dayLightSavingsTime);
         if (result == -100 || result == -1) {
             const unexpectedErrorEmbed = new EmbedBuilder()
                 .setTitle('Error')
@@ -89,8 +101,8 @@ module.exports = {
     }
 
 }
-
-async function handleInput(timezoneOne, timezoneTwo, userId, guildId) {
+//rework
+async function handleInput(timezoneOne, timezoneTwo, userId, guildId, dayLightSavingsTime) {
     let hour, minute;
     if (timezoneOne && timezoneTwo) {
         return -1;
@@ -131,11 +143,12 @@ async function handleInput(timezoneOne, timezoneTwo, userId, guildId) {
             timezoneSpecified: true,
             hours: hour,
             minutes: minute,
+            dayLightSavingsTime: dayLightSavingsTime,
         });
         await newTimezone.save().catch((error) => { console.log(`error uploading reminder to database. error: ${error}`); return -1; })
         return 0;
     } else {
-        if (user[0].hours == hour && user[0].minutes == minute) {
+        if (user[0].hours == hour && user[0].minutes == minute && user[0].dayLightSavingsTime) {
             return -2;
         } else {
             user[0].deleteOne(query);
@@ -145,6 +158,7 @@ async function handleInput(timezoneOne, timezoneTwo, userId, guildId) {
                 timezoneSpecified: true,
                 hours: hour,
                 minutes: minute,
+                dayLightSavingsTime: dayLightSavingsTime,
             });
             await newTimezone.save().catch((error) => { console.log(`error uploading reminder to database. error: ${error}`); return -1; })
             return 0;
