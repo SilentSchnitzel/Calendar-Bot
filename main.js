@@ -7,9 +7,8 @@ const ping = require('./commands/ping.js');
 const daily_reminder = require('./commands/daily-reminder');
 const deploy_commands = require('./deploy-commands.js');
 const check_daily_reminders = require('./utils/daily-reminder-checker');
-const config_timezone = require('./commands/config-time-zones.js');
-const utcTime = require('./commands/utc-time.js');
 const timezoneHelp = require('./commands/timezone-help.js');
+const configTimezone = require('./commands/config-timezone.js');
 const warning = require('./utils/warning.js');
 const mongoose = require('mongoose');
 const { config } = require('dotenv');
@@ -78,14 +77,11 @@ client.on('interactionCreate', (interaction) => {
     if (interaction.commandName === 'daily-reminder') {
         daily_reminder.execute(interaction);
     }
-    if (interaction.commandName === 'config-time-zones') {
-        config_timezone.execute(interaction);
-    }
-    if (interaction.commandName === 'utc-time') {
-        utcTime.execute(interaction);
-    }
     if (interaction.commandName === 'timezone-help') {
         timezoneHelp.execute(interaction);
+    }
+    if (interaction.commandName === 'config-timezone') {
+        configTimezone.execute(interaction);
     }
 });
 

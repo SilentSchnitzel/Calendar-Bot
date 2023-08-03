@@ -3,6 +3,7 @@ const updateDB = require('../utils/daily-reminder-users.js');
 const checkDuplicateDailyReminders = require('../utils/check-duplicate-daily-reminders.js');
 const timezoneSchema = require('../models/timezone-schema.js');
 const warning = require('../utils/warning.js');
+const convertTimeStringToDate = require('../utils/convertToDate.js');
 
 //.addStringOption is how you add arguments to your command allowing for user input
 module.exports = {
@@ -81,7 +82,7 @@ module.exports = {
 
                 const warningEmbed = new EmbedBuilder()
                     .setTitle('Warning')
-                    .setDescription('It appears that you have not configured your timezone. It will be assumed that you will be 3 hours behind UTC time (whatever time it is in New York).')
+                    .setDescription('It appears that you have not configured your timezone. It will be assumed that you live in America/New York')
                     .setColor('Red');
 
                 const row = new ActionRowBuilder()
@@ -96,31 +97,7 @@ module.exports = {
 
 }
 
-//convert strings like "8:00" and "22:00" to something of type date
-function convertTimeStringToDate(timeString) {
-    var date = new Date();
-    //splits the string into the hour and minute part
-    var timeComponents = timeString.split(':');
-    var hours = parseInt(timeComponents[0], 10);
-    var minutes = parseInt(timeComponents[1], 10);
-    // Set the hours and minutes of the date object
-    date.setHours(hours);
-    date.setMinutes(minutes);
-
-    //checks to see if the date is valid
-    const validity = isNaN(date);
-    if (validity == true) {
-        return [null, null];
-    }
-    if (hours > 23) {
-        return [null, null];
-    }
-    if (minutes > 59) {
-        return [null, null];
-    }
-    return [hours, minutes];
-}
-
+//rework
 async function getTimezone(userId, guildId) {
     let hours;
     let minutes;
