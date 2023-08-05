@@ -9,8 +9,8 @@ const { Client, EmbedBuilder } = require('discord.js')
 async function check_daily_reminders(client) {
     const currentTime = new Date();
     const query = {
-        hours: currentTime.getHours(),
-        minutes: currentTime.getMinutes(),
+        hours: currentTime.getUTCHours(),
+        minutes: currentTime.getUTCMinutes(),
     };
 
     const users = await dailyReminderUsers.find(query);

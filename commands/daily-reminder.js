@@ -60,17 +60,20 @@ module.exports = {
         //accounting for their timezone
         const t = new TimezoneOffsetRetriever(userId, guildId, hours, minutes);
         const offsets = await t.getUserTimezone();
-        console.log('test');
+        let newTime = [null, null];
         if (offsets[0] == null) {
-            const newTime = t.applyDefaultOffset();
-            console.log(newTime[0]);
-            console.log(newTime[1]);
+            newTime = t.applyDefaultOffset();
         } else {
-            const newTime = t.applyOffset(offsets[0], offsets[1]);
-            console.log(newTime[0]);
-            console.log(newTime[1]);
+            newTime = t.applyOffset(offsets[0], offsets[1]);
         }
-        const result = await updateDB(userId, guildId, reminder, hours, minutes, channel);
+        if (newTime[0] == null || newTime[1] == null) {
+            const unexpectedErrorEmbed = new EmbedBuilder()
+                .setTitle('New Daily Reminder')
+                .setDescription('An unexpected error has occured. Please try again later.')
+                .setColor('Red');
+            await interaction.reply({ embeds: [unexpectedErrorEmbed], ephemeral: true });
+        }
+        const result = await updateDB(userId, guildId, reminder, newTime[0], newTime[1], channel);
         //handle any errors that occured from updating the database
         if (result == -1) {
             const commandFailedEmbed = new EmbedBuilder()
