@@ -1,7 +1,7 @@
 const { EmbedBuilder, SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
 const updateDB = require('../utils/daily-reminder-users.js');
 const checkDuplicateDailyReminders = require('../utils/check-duplicate-daily-reminders.js');
-const timezoneSchema = require('../models/timezone-schema.js');
+const TimezoneOffsetRetriever = require('../utils/timezone-offset-retriever.js');
 const warning = require('../utils/warning.js');
 const convertTimeStringToDate = require('../utils/convertToDate.js');
 
@@ -57,8 +57,21 @@ module.exports = {
             await interaction.reply({ embeds: [duplicateReminderEmbed], ephemeral: true });
             return;
         }
-        const info = await getTimezone(userId, guildId);
+        //accounting for their timezone
+        const t = new TimezoneOffsetRetriever(userId, guildId, hours, minutes);
+        const offsets = await t.getUserTimezone();
+        console.log('test');
+        if (offsets[0] == null) {
+            const newTime = t.applyDefaultOffset();
+            console.log(newTime[0]);
+            console.log(newTime[1]);
+        } else {
+            const newTime = t.applyOffset(offsets[0], offsets[1]);
+            console.log(newTime[0]);
+            console.log(newTime[1]);
+        }
         const result = await updateDB(userId, guildId, reminder, hours, minutes, channel);
+        //handle any errors that occured from updating the database
         if (result == -1) {
             const commandFailedEmbed = new EmbedBuilder()
                 .setTitle('New Daily Reminder')
@@ -72,6 +85,7 @@ module.exports = {
                 .setColor('Red');
             await interaction.reply({ embeds: [unexpectedErrorEmbed], ephemeral: true });
         } else {
+            //warn the user if they have not set their timezone
             const w = new warning(userId, guildId);
             const warnUser = await w.getUser();
             if (warnUser == 1) {
@@ -95,31 +109,4 @@ module.exports = {
         }
     }
 
-}
-
-//rework
-async function getTimezone(userId, guildId) {
-    let hours;
-    let minutes;
-    let status;
-    const query = {
-        userId: userId,
-        guildId: guildId,
-        timezoneSpecified: true,
-    }
-    const user = await timezoneSchema.find(query);
-    if (user.length > 1) {
-        status = -1;
-        return [status, hours, minutes];
-    }
-    if (user.length == 0) {
-        status = 0;
-        return [status, hours, minutes];
-    }
-    status = 1;
-    hours = user[0].hours;
-    minutes = user[0].minutes;
-    console.log(hours);
-    console.log(minutes);
-    return [status, hours, minutes];
 }

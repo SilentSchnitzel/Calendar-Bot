@@ -1,6 +1,5 @@
 const warningSchema = require('../models/warning-schema.js');
 const timezoneSchema = require('../models/timezone-schema.js');
-const { EmbedBuilder, Embed } = require('discord.js');
 
 //whenever a user creates a new reminder, the bot will check to see whether
 //they have set their timezone or not. If they have then the bot will not
@@ -10,6 +9,7 @@ class warning {
         this.userId = userId;
         this.guildId = guildId;
     }
+    //check to see whether the user has set their timezone or has asked the bot to not warn them
     async getUser() {
         const timezoneQuery = {
             userId: this.userId,
@@ -31,6 +31,7 @@ class warning {
         }
         return 1;
     }
+    //add a new entry to the database if the user clicks the button.
     async editDatabase(userId, guildId) {
         const newUser = new warningSchema({
             userId: userId,

@@ -10,10 +10,11 @@ module.exports = {
                 .setDescription('Enter in local time(whatever time your computer or phone displays) in military time')
                 .setRequired(true)),
     async execute(interaction) {
-
+        //This command will calculate the timezone offset / timezone of the user when they enter in local time
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
 
+        // get utc time
         const now = new Date();
         const year = now.getUTCFullYear();
         const month = now.getUTCMonth() + 1;
@@ -27,13 +28,12 @@ module.exports = {
         let userTimestring = interaction.options.getString('time');
         const userTime = new Date(userTimestring);
 
+        //find the difference between utc time and the user entered local time
         const difference = (userTime - utc) / (60 * 1000);
-        console.log(difference);
         const minuteOffset = difference % 60;
         const value = difference - minuteOffset;
         const hourOffset = value / 60;
-        console.log(minuteOffset);
-        console.log(hourOffset);
+        //check whether the time they entered was valid
         if (isNaN(hourOffset) == true || isNaN(minuteOffset) == true) {
             const invalidDateEmbed = new EmbedBuilder()
                 .setTitle('Error')
@@ -43,7 +43,9 @@ module.exports = {
             await interaction.reply({ embeds: [invalidDateEmbed], ephemeral: true });
             return -1;
         }
+        //update the database
         const result = await updateDataBase(minuteOffset, hourOffset, userId, guildId);
+        //handle errors
         if (result == -100) {
             const unexpectedErrorEmbed = new EmbedBuilder()
                 .setTitle('Error')
