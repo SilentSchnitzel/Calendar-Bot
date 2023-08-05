@@ -7,6 +7,7 @@ const ping = require('./commands/ping.js');
 const daily_reminder = require('./commands/daily-reminder');
 const deploy_commands = require('./deploy-commands.js');
 const check_daily_reminders = require('./utils/daily-reminder-checker');
+const handleKick = require('./utils/handle-bot-kick.js');
 const timezoneHelp = require('./commands/timezone-help.js');
 const configTimezone = require('./commands/config-timezone.js');
 const warning = require('./utils/warning.js');
@@ -84,7 +85,9 @@ client.on('interactionCreate', (interaction) => {
         configTimezone.execute(interaction);
     }
 });
-
+client.on('guildDelete', (guild) => {
+    handleKick(guild.id);
+});
 //run the check daily reminders function every minute to check for any reminders that need to be sent out
 setInterval(() => {
     check_daily_reminders(client);

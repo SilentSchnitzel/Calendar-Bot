@@ -94,7 +94,7 @@ async function updateDataBase(minuteOffset, hourOffset, userId, guildId) {
         if (user[0].hours == hourOffset && user[0].minutes == minuteOffset) {
             return -2;
         } else {
-            user[0].deleteOne(query);
+            await user[0].deleteOne(query);
             const newTimezone = timezoneSchema({
                 userId: userId,
                 guildId: guildId,

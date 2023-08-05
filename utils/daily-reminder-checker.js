@@ -1,4 +1,6 @@
 const dailyReminderUsers = require('../models/daily-reminder-schema.js');
+const handleKick = require('./handle-bot-kick.js');
+const removeUser = require('./remove-user.js');
 const { Client, EmbedBuilder } = require('discord.js')
 /**
  * 
@@ -20,12 +22,14 @@ async function check_daily_reminders(client) {
         const guild = client.guilds.cache.get(guildId);
         if (!guild) {
             console.log('invalid guild id');
+            handleKick(guildId);
             return;
         }
         const userId = users[i].userId;
         const recipient = guild.members.cache.get(userId);
         if (!recipient) {
             console.log('invalid user');
+            removeUser(userId, guildId)
             return;
         }
         const embed = new EmbedBuilder()
@@ -57,13 +61,4 @@ async function check_daily_reminders(client) {
     }
 }
 
-
-async function getUserTime() {
-    const currentTime = new Date();
-    const utcHour = currentTime.getUTCHours();
-    const utcMinute = currentTime.getUTCMinutes() - 2;
-    console.log(utcHour);
-    console.log(utcMinute);
-    
-}
 module.exports = check_daily_reminders;
