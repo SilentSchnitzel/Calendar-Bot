@@ -10,6 +10,10 @@ const check_daily_reminders = require('./utils/daily-reminder-checker');
 const handleKick = require('./utils/handle-bot-kick.js');
 const timezoneHelp = require('./commands/timezone-help.js');
 const configTimezone = require('./commands/config-timezone.js');
+const deleteDailyReminders = require('./commands/delete-daily-reminder.js');
+const displayDailyReminders = require('./commands/display-daily-reminders.js');
+const displayTimezone = require('./commands/display-timezone.js');
+const resetTimezone = require('./commands/reset-timezone.js');
 const warning = require('./utils/warning.js');
 const mongoose = require('mongoose');
 const { config } = require('dotenv');
@@ -84,7 +88,20 @@ client.on('interactionCreate', (interaction) => {
     if (interaction.commandName === 'config-timezone') {
         configTimezone.execute(interaction);
     }
+    if (interaction.commandName === 'delete-daily-reminder') {
+        deleteDailyReminders.execute(interaction);
+    }
+    if (interaction.commandName === 'display-daily-reminders') {
+        displayDailyReminders.execute(interaction);
+    }
+    if (interaction.commandName === 'display-timezone') {
+        displayTimezone.execute(interaction);
+    }
+    if (interaction.commandName === 'reset-timezone') {
+        resetTimezone.execute(interaction);
+    }
 });
+// delete all entries made by users from a server that has removed the bot
 client.on('guildDelete', (guild) => {
     handleKick(guild.id);
 });
