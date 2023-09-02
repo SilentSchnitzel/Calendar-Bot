@@ -1,5 +1,6 @@
 const { EmbedBuilder, SlashCommandBuilder } = require("discord.js");
 const timezoneSchema = require('../models/timezone-schema.js');
+const dailyReminderSchema = require('../models/daily-reminder-schema.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -43,6 +44,7 @@ module.exports = {
             await interaction.reply({ embeds: [invalidDateEmbed], ephemeral: true });
             return -1;
         }
+        const updateReminders = await updateTimes(userId, guildId, hourOffset, minuteOffset); //test
         //update the database
         const result = await updateDataBase(minuteOffset, hourOffset, userId, guildId);
         //handle errors
@@ -106,4 +108,106 @@ async function updateDataBase(minuteOffset, hourOffset, userId, guildId) {
             return 0;
         }
     }
+}
+//test this code
+async function updateTimes(userId, guildId, newHourOffset, newMinuteOffset) {
+    const query = {
+        userId: userId,
+        guildId: guildId,
+    };
+    const timezoneQuery = {
+        userId: userId,
+        guildId: guildId,
+        timezoneSpecified: true,
+    }
+    const reminders = await dailyReminderSchema.find(query);
+    if (reminders.length == 0) {
+        return 0;
+    }
+    const timezone = await timezoneSchema.find(timezoneQuery);
+    //get the original offset
+    let hourOffset;
+    let minuteOffset;
+    if (timezone.length == 0) {
+        const now = new Date();
+        const month = now.getMonth();
+        if (month == 3) {
+            const date = now.getDate();
+            if (date >= 12) {
+                hourOffset = -4;
+                minuteOffset = 0;
+            }
+        }
+        if (month == 11) {
+            const date = now.getDate();
+            if (date < 11) {
+                hourOffset = -4;
+                minuteOffset = 0;
+            }
+        }
+        if (mounth > 3 && month < 11) {
+            hourOffset = -4;
+            minuteOffset = 0;
+        } else {
+            hourOffset = -5
+            minuteOffset = 0;
+        }
+    } else {
+        hourOffset = timezone[0].hours;
+        minuteOffset = timezone[0].minutes;
+    }
+
+    for (let i = 0; i < reminders.length; i++) {
+        const reminder = reminders[i].reminder;
+        const channel = reminders[i].channel;
+        let hour = reminders[i].hours;
+        let minute = reminders[i].minutes;
+        await reminders[i].deleteOne();
+        //convert the time back into local time
+        hour = hour + hourOffset;
+        minute = minute + minuteOffset;
+        if (minute >= 60) {
+            minute = minute - 60;
+            hour++;
+        }
+        if (hour >= 24) {
+            hour = hour - 24;
+        }
+        if (minute < 0) {
+            minute = 60 + minute;
+            hour--;
+        }
+        if (hour < 0) {
+            hour = hour + 24;
+        }
+        //calculate the new time
+        let newMinute = minute - newMinuteOffset;
+        let newHour = hour - newHourOffset;
+        if (newMinute >= 60) {
+            newMinute = newMinute - 60;
+            newHour++;
+        }
+        if (newHour >= 24) {
+            newHour = newHour - 24;
+        }
+        if (newMinute < 0) {
+            newMinute = 60 + newMinute;
+            newHour--;
+        }
+        if (newHour < 0) {
+            newHour = 24 + newHour;
+        }
+        const newReminder = dailyReminderSchema({
+            userId: userId,
+            guildId: guildId,
+            reminder: reminder,
+            hours: newHour,
+            minutes: newMinute,
+            channel: channel,
+        });
+        await newReminder.save().catch((error) => { console.log(`error uploading reminder to database. error: ${error}`); return -2; });
+        return 0;
+
+    }
+
 }

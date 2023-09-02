@@ -14,6 +14,7 @@ const deleteDailyReminders = require('./commands/delete-daily-reminder.js');
 const displayDailyReminders = require('./commands/display-daily-reminders.js');
 const displayTimezone = require('./commands/display-timezone.js');
 const resetTimezone = require('./commands/reset-timezone.js');
+const deleteAllDailyReminders = require('./commands/delete-all-daily-reminders.js');
 const warning = require('./utils/warning.js');
 const mongoose = require('mongoose');
 const { config } = require('dotenv');
@@ -99,6 +100,9 @@ client.on('interactionCreate', (interaction) => {
     }
     if (interaction.commandName === 'reset-timezone') {
         resetTimezone.execute(interaction);
+    }
+    if (interaction.commandName === 'delete-all-daily-reminders') {
+        deleteAllDailyReminders.execute(interaction);
     }
 });
 // delete all entries made by users from a server that has removed the bot

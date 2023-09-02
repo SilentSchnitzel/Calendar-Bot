@@ -29,8 +29,18 @@ module.exports = {
                 minute = '0' + minute;
             }
             let timestring;
+            let otherMinute;
+            if (minute[0] == '-') {
+                otherMinute = minute;
+                otherMinute = otherMinute.replace('-', '');
+            }
             if (hour[0] == '-') {
-                timestring = 'UTC' + hour + ':' + minute;
+                if (otherMinute == null) {
+                    timestring = 'UTC' + hour + ':' + minute;
+                } else {
+                    timestring = 'UTC' + hour + ':' + otherMinute;
+                }
+
             } else {
                 timestring = 'UTC+' + hour + ':' + minute;
             }
