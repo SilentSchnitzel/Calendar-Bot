@@ -1,15 +1,15 @@
 const { EmbedBuilder, SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
-const updateDB = require('../utils/daily-reminder-users.js');
-const checkDuplicateDailyReminders = require('../utils/check-duplicate-daily-reminders.js');
+const weeklyReminderSchema = require('../models/weekly-reminder-schema.js');
+const convertTimeStringToDate = require('../utils/convertToDate.js');
 const TimezoneOffsetRetriever = require('../utils/timezone-offset-retriever.js');
 const warning = require('../utils/warning.js');
-const convertTimeStringToDate = require('../utils/convertToDate.js');
+const updateWeeklyReminders = require('../utils/weekly-reminder-users.js');
+const checkDuplicateWeeklyReminders = require('../utils/check-duplicate-weekly-reminders.js');
 
-//.addStringOption is how you add arguments to your command allowing for user input
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('daily-reminder')
-        .setDescription('A command that allows you to set daily reminders for yourself')
+        .setName('weekly-reminder')
+        .setDescription('A command that allows you to create weekly reminders')
         .addStringOption(option1 =>
             option1.setName('time')
                 .setDescription('set the time at which you would like to recieve your daily reminder')
@@ -21,42 +21,47 @@ module.exports = {
         .addStringOption(option3 =>
             option3.setName('channel')
                 .setDescription('channel you would like to recieve your reminder in. type dm to recieve reminder in dms')
+                .setRequired(true))
+        .addStringOption(option4 =>
+            option4.setName('day')
+                .setDescription('enter in the day you would like to recieve your reminder every week')
                 .setRequired(true)),
     async execute(interaction) {
-        //getting user input (time and reminder)
         const time = interaction.options.getString('time');
         const reminder = interaction.options.getString('reminder');
         const channel = interaction.options.getString('channel');
-
+        const day = interaction.options.getString('day');
+        const userId = interaction.user.id;
+        const guildId = interaction.guildId;
+        //check to see whether the input is valid
+        let result = convertDayToNumber(day);
+        if (result == -1) {
+            const invalidDayEmbed = new EmbedBuilder()
+                .setTitle('Error')
+                .setDescription('The day you entered was invalid. for help, run the /help command')
+                .setColor('Red');
+            interaction.reply({ embeds: [invalidDayEmbed], ephemeral: true });
+            return;
+        }
         const [hours, minutes] = convertTimeStringToDate(time);
-        //if the date is invalid, then inform the user
         if (hours == null && minutes == null) {
             invalidDateEmbed = new EmbedBuilder()
                 .setTitle('Error')
                 .setDescription('The time you entered was invalid.\n' +
-                    'For help using this command, run the `/help` command.')
+                    'For help, run the `/help` command.')
                 .setColor('Red');
             await interaction.reply({ embeds: [invalidDateEmbed], ephemeral: true });
             return;
         }
-
-        const userId = interaction.user.id;
-        const guildId = interaction.guildId;
-
-        const duplicate = await checkDuplicateDailyReminders(userId, guildId, reminder);
-        if (duplicate == -1) {
+        const duplicateResult = await checkDuplicateWeeklyReminders(userId, guildId, reminder, result);
+        if (duplicateResult == -1) {
             const duplicateReminderEmbed = new EmbedBuilder()
                 .setTitle('Error')
-                .setDescription('the reminder you entered matches another one of your reminders and thus this reminder will not be saved. you may not have duplicate reminders')
+                .setDescription('the reminder you entered matches another one of your weekly reminders and thus this reminder will not be saved. you may not have duplicate weekly reminders')
                 .setColor('Red');
             await interaction.reply({ embeds: [duplicateReminderEmbed], ephemeral: true });
             return;
         }
-        const initialEmbed = new EmbedBuilder()
-            .setTitle('New Daily Reminder')
-            .setDescription(`Calendar Bot will now remind you every day at ${time} to do this task: ${reminder} in this channel: ${channel}.`)
-            .setColor('Green');
-        //accounting for their timezone
         const t = new TimezoneOffsetRetriever(userId, guildId, hours, minutes);
         const offsets = await t.getUserTimezone();
         let newTime = [null, null];
@@ -67,20 +72,40 @@ module.exports = {
         }
         if (newTime[0] == null || newTime[1] == null) {
             const unexpectedErrorEmbed = new EmbedBuilder()
-                .setTitle('New Daily Reminder')
+                .setTitle('New Weekly Reminder')
                 .setDescription('An unexpected error has occured. Please try again later.')
                 .setColor('Red');
             await interaction.reply({ embeds: [unexpectedErrorEmbed], ephemeral: true });
         }
-        const result = await updateDB(userId, guildId, reminder, newTime[0], newTime[1], channel);
+        if (offsets[0] < 0) {
+            if (newTime[0] < hours) {
+                result++;
+                if (result == 7) {
+                    result = 0;
+                }
+            }
+        }
+        if (offsets[0] > 0) {
+            if (newTime[0] > hours) {
+                result--;
+                if (result == -1) {
+                    result = 6;
+                }
+            }
+        }
+        const embed = new EmbedBuilder()
+            .setTitle('New Weekly Reminder')
+            .setDescription(`Calendar Bot will now remind you every ${day} at ${time} to do this task: ${reminder} in this channel: ${channel}`)
+            .setColor('Green');
+        const DBresult = await updateWeeklyReminders(userId, guildId, reminder, newTime[0], newTime[1], channel, result);
         //handle any errors that occured from updating the database
-        if (result == -1) {
+        if (DBresult == -1) {
             const commandFailedEmbed = new EmbedBuilder()
                 .setTitle('New Daily Reminder')
                 .setDescription('you already have a maximum of 5 daily reminder. You must delete one of your daily reminders to add this reminder.')
                 .setColor('Red');
             await interaction.reply({ embeds: [commandFailedEmbed], ephemeral: true })
-        } else if (result == -2) {
+        } else if (DBresult == -2) {
             const unexpectedErrorEmbed = new EmbedBuilder()
                 .setTitle('New Daily Reminder')
                 .setDescription('An unexpected error has occured. Please try again later.')
@@ -103,12 +128,36 @@ module.exports = {
 
                 const row = new ActionRowBuilder()
                     .addComponents(button);
-                await interaction.reply({ embeds: [initialEmbed, warningEmbed], components: [row], ephemeral: true });
+                await interaction.reply({ embeds: [embed, warningEmbed], components: [row], ephemeral: true });
             } else {
-                await interaction.reply({ embeds: [initialEmbed], ephemeral: true });
+                await interaction.reply({ embeds: [embed], ephemeral: true });
             }
-
         }
     }
+}
+function convertDayToNumber(day) {
+    day = day.toLowerCase();
+    if (day == 'monday') {
+        return 1;
+    }
+    if (day == 'tuesday') {
+        return 2;
+    }
+    if (day == 'wednesday') {
+        return 3;
+    }
+    if (day == 'thursday') {
+        return 4;
+    }
+    if (day == 'friday') {
+        return 5;
+    }
+    if (day == 'saturday') {
+        return 6;
+    }
+    if (day == 'sunday') {
+        return 0;
+    }
+    return -1;
 
 }

@@ -30,7 +30,7 @@ module.exports = {
         } else {
             const errorEmbed = new EmbedBuilder()
                 .setTitle('Error')
-                .setDescription('It appears that the daily reminder you have entered for deletion does not match any of the daily reminders you have registered. Please try again.  for help run the /help command')
+                .setDescription('It appears that the daily reminder you have entered for deletion does not match any of the daily reminders you have registered. Please try again. for help run the /help command')
                 .setColor('Red');
             interaction.reply({ embeds: [errorEmbed], ephemeral: true });
         }

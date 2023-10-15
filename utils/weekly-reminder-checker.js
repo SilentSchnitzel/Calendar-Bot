@@ -1,22 +1,22 @@
-const dailyReminderUsers = require('../models/daily-reminder-schema.js');
 const handleKick = require('./handle-bot-kick.js');
 const removeUser = require('./remove-user.js');
 const { Client, EmbedBuilder } = require('discord.js');
+const weeklyReminderSchema = require('../models/weekly-reminder-schema.js');
 /**
  * 
  * @param {Client} client 
  */
 
-//this function will run every minute to check to see if any reminders need to be sent out
-async function check_daily_reminders(client) {
+
+async function weeklyReminderChecker(client) {
     const currentTime = new Date();
     const query = {
         hours: currentTime.getUTCHours(),
         minutes: currentTime.getUTCMinutes(),
-    };
-
-    const users = await dailyReminderUsers.find(query);
-
+        day: currentTime.getUTCDay(),
+    }
+    const users = await weeklyReminderSchema.find(query);
+    console.log(users.length);
     for (let i = 0; i < users.length; i++) {
         const guildId = users[i].guildId;
         const guild = client.guilds.cache.get(guildId);
@@ -33,7 +33,7 @@ async function check_daily_reminders(client) {
             return;
         }
         const embed = new EmbedBuilder()
-            .setTitle('Daily Reminder')
+            .setTitle('Weekly Reminder')
             .setDescription(`It is now time to: ${users[i].reminder}`)
             .setColor('Gold');
         if (users[i].channel === 'dm') {
@@ -61,4 +61,4 @@ async function check_daily_reminders(client) {
     }
 }
 
-module.exports = check_daily_reminders;
+module.exports = weeklyReminderChecker;
